@@ -5,12 +5,12 @@ SparkFun Particle Sensor SN-GCJA5 Arduino Library
 
 [*SparkFun Panasonic SN-GCJA5 Particle Sensor (SPX-17123)*](https://www.sparkfun.com/products/17123)
 
-The Panasonic SN-GCJA5 is a highly accurate and easy to use particle matter detector. Great for detecting PM1.0, PM2.5, and PM10 sized particles. The only downside to this device is that it requires 5V (presumably to run the fan) but 3.3V for the I2C interface pins. We recommend connecting the sensor to a 3.3V micro such as the [SparkFun BlackBoard](https://www.sparkfun.com/products/16282) set to 3.3V.
+The Panasonic SN-GCJA5 is a highly accurate and easy to use particle matter detector. Great for detecting PM1.0, PM2.5, and PM10 sized particles. The only downside to this device is that it requires 5V (presumably to run the fan) but 3.3V for the I2C interface pins.
 
 ## versioning
  BASED ON THE ORIGINAL [SPARKFUN LIBRARY](https://github.com/sparkfun/SparkFun_Particle_Sensor_SN-GCJA5_Arduino_Library)
  November 2020 / paulvha
- * added product documentation in extras
+ * added product documentation in [extras](extras)
  * added [deep-dive analyses](extras/SN-GCJA5.odt) on the sensor
  * added example10, 11, 12 and 13
  * added addtional call in library for TestReg
