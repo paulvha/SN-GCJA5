@@ -11,7 +11,7 @@ The Panasonic SN-GCJA5 is a highly accurate and easy to use particle matter dete
  BASED ON THE ORIGINAL [SPARKFUN LIBRARY](https://github.com/sparkfun/SparkFun_Particle_Sensor_SN-GCJA5_Arduino_Library)
  November 2020 / paulvha
  * added product documentation in extras
- * added deep-dive analyses on the sensor
+ * added [deep-dive analyses](extras/SN-GCJA5.odt) on the sensor
  * added example10, 11, 12 and 13
  * added addtional call in library for TestReg
 
