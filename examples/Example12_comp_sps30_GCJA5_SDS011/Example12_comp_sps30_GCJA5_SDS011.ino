@@ -22,8 +22,8 @@
     TX  ---------------------------  RX1
     RX  --------------------------   TX1
     Select                                  (not connected, serial comms selected)
-                  SDA  -----------   SDA
                   SCL  -----------   SCL
+                  SDA  -----------   SDA
                   Serial                    (not connected)
                             Tx ----- RX3
                             RX ----- TX3

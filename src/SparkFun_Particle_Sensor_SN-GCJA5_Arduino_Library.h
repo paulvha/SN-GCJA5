@@ -15,13 +15,20 @@
 
   You should have received a copy of the GNU General Public License
   along with this program. If not, see <http://www.gnu.org/licenses/>.
+  *
+  * November 2020 / paulvha
+  * Changed the way I2C read is performed. Now it will read all values
+  * into a buffer in a single I2C. The data will be read from that buffer.
+  * If a data point has already been read from the buffer, the buffer will
+  * be refreshed. This is done because the SN-GCJA5 sensor can not handle
+  * many I2C calls after each other and will lock with keeping SCL line LOW.
+  * This way we can also get a snap shot of the data at the same time.
 */
 
 #ifndef SPARKFUN_PARTICLE_SENSOR_SNGCJA5_ARDUINO_LIBRARY_H
 #define SPARKFUN_PARTICLE_SENSOR_SNGCJA5_ARDUINO_LIBRARY_H
 
 #include "Arduino.h"
-
 #include <Wire.h>
 
 class SFE_PARTICLE_SENSOR
@@ -45,11 +52,6 @@ class SFE_PARTICLE_SENSOR
     bool begin(TwoWire &wirePort = Wire);
     bool isConnected();
 
-    uint8_t readRegister8(uint8_t addr);
-    uint16_t readRegister16(uint8_t addr);
-    uint32_t readRegister32(uint8_t addr);
-
-    float getPM(uint8_t pmRegister);
     float getPM1_0();
     float getPM2_5();
     float getPM10();
@@ -69,8 +71,35 @@ class SFE_PARTICLE_SENSOR
     bool TestReg(uint8_t addr, uint8_t *r); // paulvha added to test other registers
 
   private:
-    TwoWire *_i2cPort; //The generic connection to user's chosen I2C hardware
-    uint8_t _deviceAddress = 0x33; //Default, unchangable address
+
+    float getPM(uint8_t pmRegister);
+    bool readMeasurement();
+    uint8_t readRegister8(uint8_t addr);
+    uint16_t readRegister16(uint8_t addr);
+    uint32_t readRegister32(uint8_t addr);
+
+    uint8_t read_buf[100];         // buffer to store data read
+    uint8_t offset;                // offset in read_buf
+    TwoWire *_i2cPort;             // The generic connection to user's chosen I2C hardware
+    uint8_t _deviceAddress = 0x33; // Default, unchangable address
+
+    /*! keeps track whether to read from Sensor */
+    bool Pm1HasBeenReported = true;
+    bool Pm25HasBeenReported = true;
+    bool Pm10HasBeenReported = true;
+
+    bool Pc05HasBeenReported = true;
+    bool Pc1HasBeenReported = true;
+    bool Pc25HasBeenReported = true;
+    bool Pc5HasBeenReported = true;
+    bool Pc75HasBeenReported = true;
+    bool Pc10HasBeenReported = true;
+
+    bool StateHasBeenReported = true;
+    bool StSenHasBeenReported = true;
+    bool StPdHasBeenReported = true;
+    bool StLdHasBeenReported = true;
+    bool StFanHasBeenReported = true;
 };
 
 #endif

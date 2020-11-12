@@ -23,12 +23,12 @@
     TX  --------------------  RX1
     RX  --------------------  TX1
     Select                                (not connected, serial comms selected)
-                  SDA  -----  SDA
                   SCL  -----  SCL
+                  SDA  -----  SDA
                   Serial                  (not connected)
 
   Open the serial monitor at 115200 baud
- 
+
   ================================ Disclaimer ======================================
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -100,7 +100,7 @@ void setup()
   }
 
   Serial.println(F("The particle sensor SN-GCJA5 detected"));
-  
+
   // set driver debug level
   sps30.EnableDebugging(DEBUG);
 
@@ -170,7 +170,7 @@ bool read_all()
 
   // print result on one line, easy for spreadsheet == true
   if (SpreadSheetLayout) display_spreadSheet(&v);
-   
+
   // print result underneath each other
   else display_line(&v);
 
@@ -253,7 +253,7 @@ void display_line(struct sps_values *v)
   static bool header = true;
   float val, val_tot;
   uint16_t val_t, val_cnt;
- 
+
   // only print header first time
   if (header) {
     Serial.println(F("\t----------------------------Mass -------------    -------------------------------- Number ---------------------------------     -------Partsize -------- "));

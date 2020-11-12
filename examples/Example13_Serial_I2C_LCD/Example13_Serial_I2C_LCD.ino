@@ -1,16 +1,16 @@
 /*
   Version 1.0 / November 2020 / paulvha
   - initial version
-  
+
   This sketch will read the SN-GCJA5 with I2C and / or Serial
   Both can be used at the same time.
-   
-  The output is either in a single row (seperated with tabs) or double 
-  underneath each other.  
+
+  The output is either in a single row (seperated with tabs) or double
+  underneath each other.
 
   Feel like supporting our work? Buy a board from SparkFun!
   https://www.sparkfun.com/products/17123
-  
+
   The output is also sent to an LCD https://www.sparkfun.com/products/16396
   you can set alarm limits Low and HIGH alarm to change the color of the background
   you can decide to only display when alarm or when an optional button is pressed
@@ -19,8 +19,8 @@
   SN-GCJA5       Mega2560   LCD
   VCC ------------- 5V ----  RAW 3V3 -9
   GND ------------  GND ---  GND
-  SDA  -----------  SDA ---  DA
   SCL  -----------  SCL ---  CL
+  SDA  -----------  SDA ---  DA
   Serial ---------  RX2                    / pin 17   Serial2
 
   Serial pin is close to edge of the sensor, VCC is most inside pin
@@ -28,11 +28,11 @@
 
   LCD INFO **************************************************************************************
   https://www.sparkfun.com/products/16396
- 
+
   The SparkFun SerLCD is an AVR-based, serial enabled LCD that provides a simple and cost
   effective solution for adding a 16x2 Black on RGB Liquid Crystal Display into your project.
   Both the SPS30 and LCD can be connected on the same WIRE device.
- 
+
   The Qwiic adapter should be attached to the display as follows. If you have a model (board or LCD)
   without QWiic connect, or connect is indicated.
   Display  / Qwiic Cable Color        LCD -connection without Qwiic
@@ -40,18 +40,18 @@
   RAW      / Red                      3V3 -9 v
   SDA      / Blue                     I2c DA
   SCL      / Yellow                   I2C CL
- 
+
   Note: If you connect directly to a 5V Arduino instead, you *MUST* use
   a level-shifter on SDA and SCL to convert the i2c voltage levels down to 3.3V for the display.
   !!!! Measured with a scope it turns out that the pull up is already to 3V3 !!!!
- 
+
   If ONLYONBUTTON is set, connect a push-button switch between pin BUTTONINPUT and ground.
- 
-  
+
+
   ================================ Disclaimer ======================================
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ===================================================================================
   NO support, delivered as is, have fun, good luck !!
 */
@@ -60,8 +60,8 @@
 //   Select sensor communication to use                 //
 //////////////////////////////////////////////////////////
 #define SN_I2C_COMMS true
-#define SN_SERIALCOMMS  true 
-                       
+#define SN_SERIALCOMMS  true
+
 //////////////////////////////////////////////////////////////////////////
 //                SELECT LCD settings                                   //
 //////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ float PM2_LIMITLOW = 55.0 ;      // Background LCD color will start LCDBACKGROUN
 float PM2_LIMITHIGH = 110.0 ;    // Background LCD color will start LCDBACKGROUNDCOLOR and turn to red if
                                  // PM2.5 is above this limit to return to LCDBACKGROUNDCOLOR background when below.
                                  // set to zero to disable
-                                 
+
 #define LIMITOFFSET  3           // trigger number of PM's below the limit after measuring above the limitvalue
                                  // This is needed as the SN-GCJA5 output does not show a steady line
                                  // the output is nervous with a lot of peaks and dip's
@@ -116,8 +116,8 @@ float PM2_LIMITHIGH = 110.0 ;    // Background LCD color will start LCDBACKGROUN
 
 #define LCDTIMEOUT 10            // Number of seconds LCD is displayed after button was pressed
                                  // is ignored if ONLYONBUTTON is set to false
-                                  
-#endif                          
+
+#endif
 
 //////////////////////////////////////////////////////////
 //   Select layout to use
@@ -179,12 +179,12 @@ void setup()
 {
   Serial.begin(115200);
   Serial.println(F("Panasonic SN-GCJA5 Serial / I2c Example"));
-  
+
   LCDCON.begin();
 
   // initialize LCD
   lcdinit();
-  
+
 #if SN_I2C_COMMS == true
   Wire.begin();
 
@@ -196,7 +196,7 @@ void setup()
     lcd.write("Sensor Error");
     while (1);
   }
-  
+
   Serial.println(F("The particle sensor SN-GCJA5 detected"));
 #endif
 
@@ -205,7 +205,7 @@ void setup()
   SenCom.begin(9600, SERIAL_8E1);
   offset = 0;
 #endif
- 
+
   Serial.println(F("Sensor started"));
   lcd.clear();
   lcd.write("Sensor Started");
@@ -215,7 +215,7 @@ void setup()
 void loop()
 {
   read_all();
-  
+
   // delay for 3 seconds but capture button pressed
   for (int i=0; i < 10; i++){
     delay(300);
@@ -231,31 +231,31 @@ void read_all()
 #if SN_SERIALCOMMS == true
 
   offset = 0;
-  
+
   // clear anything pending in the serial buffer
   while (SenCom.available()) SenCom.read();
-  
+
   // wait for new data to arrive (each second)
   delay(1100);
-  
+
   // read data from serial port
   if(SenCom.available()){
-    
+
     while (SenCom.available()){
       data[offset] = SenCom.read();
-     
+
       // check for start of message
       if (offset == 0) {
         if (data[offset] != STX) continue;
       }
-      
+
       // check for end of message
       if (offset == 31) {
-        
+
         uint8_t FCC = 0;
-        for ( int i = 1 ; i < 30 ; i ++ ) 
+        for ( int i = 1 ; i < 30 ; i ++ )
             FCC = FCC ^ data[i];
-        
+
         if (data[offset] != ETX || FCC != data[30] ) {
           Serial.println("Packet error");
           offset = 0;
@@ -264,7 +264,7 @@ void read_all()
 
         SerComplete = true;  // we have valid data
         break;
-  
+
       }
 
       offset++;             // next position
@@ -283,10 +283,10 @@ void read_all()
 
   // if NOT only LCD
   if (! LCDOUTPUTONLY) {
-    
+
     // print result on one line, easy for spreadsheet == true
     if (SpreadSheetLayout) display_spreadSheet(SerComplete);
-    
+
     // print result underneath each other
     else display_line(SerComplete);
   }
@@ -341,7 +341,7 @@ void display_line(bool SerComplete)
 {
   static bool header = true;
   float val, val_t, val_tot, val_cnt;
-  
+
   // only print header first time
   if (header) {
     Serial.println(F("\t----------------------------Mass -------------    -------------------------------- Number ---------------------------------  -- status --"));
@@ -353,8 +353,8 @@ void display_line(bool SerComplete)
     // often seen the first reading to be "out of bounds". so we skip it
     return(true);
   }
-  
- #if SN_I2C_COMMS == true 
+
+ #if SN_I2C_COMMS == true
   Serial.print("I2c\t");
   print_aligned((double) myAirSensor.getPM1_0(), 8, 5);
   print_aligned((double) myAirSensor.getPM2_5(), 8, 5);
@@ -364,29 +364,29 @@ void display_line(bool SerComplete)
   val_tot = val * 0.5;
   val_cnt = val;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = myAirSensor.getPC1_0();
   val += val_t;
   val_tot += val * 1;
   val_cnt += val_t;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = myAirSensor.getPC2_5();
   val += val_t;
   val_tot += val * 2.5;
   val_cnt += val_t;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = myAirSensor.getPC5_0();
   val += val_t;
   val_tot += val * 5;
   val_cnt += val_t;
-  
+
   val_t = myAirSensor.getPC7_5();
   val += val_t;
   val_tot += val * 7.5;
   val_cnt += val_t;
-  
+
   val_t = myAirSensor.getPC10();
   val += val_t;
   val_tot += val * 10;
@@ -395,7 +395,7 @@ void display_line(bool SerComplete)
 
   val = val_tot / val_cnt;
   print_aligned((double) val, 9, 2);
-  
+
   Serial.print(" ");
   Serial.println(myAirSensor.getState(), HEX);
 #endif
@@ -410,29 +410,29 @@ void display_line(bool SerComplete)
   val_tot = val * 0.5;
   val_cnt = val;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = bufto16(SER_SNGCJA5_PCOUNT_1_0);
   val += val_t;
   val_tot += val * 1;
   val_cnt += val_t;
   print_aligned((double) val, 9, 2);
-  
+
   val_t =bufto16(SER_SNGCJA5_PCOUNT_2_5);
   val += val_t;
   val_tot += val * 2.5;
   val_cnt += val_t;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = bufto16(SER_SNGCJA5_PCOUNT_5_0);
   val += val_t;
   val_tot += val * 5;
   val_cnt += val_t;
-  
+
   val_t = bufto16(SER_SNGCJA5_PCOUNT_10);
   val += val_t;
   val_tot += val * 7.5;
   val_cnt += val_t;
-  
+
   val_t = bufto16(SER_SNGCJA5_PCOUNT_10);
   val += val_t;
   val_tot += val * 10;
@@ -443,11 +443,11 @@ void display_line(bool SerComplete)
   print_aligned((double) val, 9, 2);
   Serial.print(" ");
   Serial.print(data[SER_SNGCJA5_STATE], HEX);
-  
+
   if (! SerComplete) Serial.print("\told");
-  
+
   Serial.println();
-#endif  
+#endif
 }
 
 // display result easy for spreadsheet copy / paste
@@ -456,28 +456,28 @@ void display_spreadSheet(bool SerComplete)
   static bool header = true;
   float val;
   uint16_t ival;
-  
+
   // only print header first time
   if (header) {
-    
+
     #if SERIALCOMMS == true
     Serial.print(F("\t------ Mass -------- \t------- Particle Count ------\t"));
     #endif
-   
-    #if I2COMMS == true 
+
+    #if I2COMMS == true
     Serial.print(F("\t------ Mass -------- \t------- Particle Count ------\t"));
     #endif
 
     Serial.println();
-    
+
     #if SERIALCOMMS == true
     Serial.print(F("\tPM1.0\tPM2.5\tPM10\tPM0.5\tPM1.0\tPM2.5\tPM10\t"));
     #endif
-    
-    #if I2COMMS == true 
+
+    #if I2COMMS == true
     Serial.print(F("\tPM1.0\tPM2.5\tPM10\tPM0.5\tPM1.0\tPM2.5\tPM10\t"));
     #endif
-    
+
     Serial.println();
     header = false;
 
@@ -485,8 +485,8 @@ void display_spreadSheet(bool SerComplete)
     return(true);
   }
 
-#if SN_I2C_COMMS == true 
-  
+#if SN_I2C_COMMS == true
+
   Serial.print("I2c\t");
   Serial.print(myAirSensor.getPM1_0(),2);
   Serial.print("\t");
@@ -500,7 +500,7 @@ void display_spreadSheet(bool SerComplete)
   val += myAirSensor.getPC1_0();    // 0.5 - 1 um
   Serial.print(val,2);
   Serial.print("\t");
-  
+
   val += myAirSensor.getPC2_5();    // 1 - 2.5 um
   Serial.print(val,2);
   Serial.print("\t");
@@ -520,7 +520,7 @@ void display_spreadSheet(bool SerComplete)
   Serial.print("\t");
   Serial.print(bufto16(SER_SNGCJA5_PM10));
   Serial.print("\t");
-  
+
   ival = bufto16(SER_SNGCJA5_PCOUNT_0_5);    // 0.3 - 0.5um
   Serial.print(ival);
   Serial.print("\t");
@@ -528,19 +528,19 @@ void display_spreadSheet(bool SerComplete)
   ival += bufto16(SER_SNGCJA5_PCOUNT_1_0);    // 0.5 - 1 um
   Serial.print(ival);
   Serial.print("\t");
-  
+
   ival += bufto16(SER_SNGCJA5_PCOUNT_2_5);    // 1 - 2.5 um
   Serial.print(ival);
   Serial.print("\t");
-  
+
   ival += bufto16(SER_SNGCJA5_PCOUNT_5_0);    // 2.5 - 5 um
   ival += bufto16(SER_SNGCJA5_PCOUNT_7_5);    // 5 - 7.5 um
   ival += bufto16(SER_SNGCJA5_PCOUNT_10);     // 7.5 - 10 um
 
   Serial.print(ival);
-  
-  
-#endif  
+
+
+#endif
 
   Serial.println();
 }
@@ -644,7 +644,7 @@ void printLCD(bool dd)
       }
     }
     else if (limitHighWasSet){
-      // check lower limit 
+      // check lower limit
       if  (val < PM2_LIMITHIGH - LIMITOFFSET) {
         lcd.setBacklight(0, 0, 255); // bright blue
         limitHighWasSet = false;
@@ -656,7 +656,7 @@ void printLCD(bool dd)
   if (PM2_LIMITLOW > 0) {
 
     if ( ! limitHighWasSet ) {
-  
+
       if (val > PM2_LIMITLOW){
         // change once..
         if(! limitLowWasSet) {
@@ -665,7 +665,7 @@ void printLCD(bool dd)
         }
       }
       else if (limitLowWasSet) {
-        // check lower limit 
+        // check lower limit
         if  (val < PM2_LIMITLOW - LIMITOFFSET) {
           lcdsetbackground();           // reset to original request
           limitLowWasSet = false;
@@ -684,7 +684,7 @@ void printLCD(bool dd)
 
   lcd.clear();
   lcd.write("PM1: PM2: PM10:");
-  
+
   // first try to display based on I2C
 #if SN_I2C_COMMS == true
   lcd.setCursor(0, 1);            // pos 0, line 1
@@ -698,7 +698,7 @@ void printLCD(bool dd)
   lcd.setCursor(10, 1);           // pos 10, line 1
   FromFloat(buf, myAirSensor.getPM10(),1);
   lcd.write(buf);
-  
+
 #else  // else use serial info (NO info behind the decimal point)
 
   // if no new serial data available indicate with .
@@ -706,7 +706,7 @@ void printLCD(bool dd)
     lcd.setCursor(15, 0);         // pos 15, line 0
     lcd.write(".");               // display No new data indicator
   }
-  
+
   lcd.setCursor(0, 1);            // pos 0, line 1
   FromFloat(buf, (double) bufto32(SER_SNGCJA5_PM1_0),1);
   lcd.write(buf);

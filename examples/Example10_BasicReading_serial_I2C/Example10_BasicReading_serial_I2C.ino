@@ -1,27 +1,27 @@
 /*
   Version 1.0 / November 2020 / paulvha
   - initial version
-  
+
   This sketch will read the SN-GCJA5 with I2C and / or Serial
   Both can be used at the same time
 
-  The output is either in a single row (seperated with tabs) or double 
+  The output is either in a single row (seperated with tabs) or double
   underneath each other.
- 
+
   Hardware connection used
   SN-GCJA5       Mega2560
   VCC ------------- 5V
   GND ------------  GND
-  SDA  -----------  SDA
   SCL  -----------  SCL
+  SDA  -----------  SDA
   Serial ---------  RX2  / pin 17   Serial2
 
   Open the serial monitor at 115200 baud
-  
+
   ================================ Disclaimer ======================================
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ===================================================================================
   NO support, delivered as is, have fun, good luck !!
 */
@@ -90,7 +90,7 @@ void setup()
     Serial.println("The particle sensor did not respond. Please check wiring. Freezing...");
     while (1);
   }
-  
+
   Serial.println(F("The particle sensor SN-GCJA5 detected"));
 #endif
 
@@ -98,7 +98,7 @@ void setup()
   SenCom.begin(9600, SERIAL_8E1);
   offset = 0;
 #endif
- 
+
   Serial.println("Sensor started");
 }
 
@@ -146,45 +146,45 @@ uint16_t bufto16(uint8_t p)
 void read_all()
 {
   bool SerComplete = false;
-  
+
 #if SERIALCOMMS == true
   offset = 0;
-  
+
   // clear anything pending in the serial buffer
   while (SenCom.available()) SenCom.read();
-  
+
   // wait for new data to arrive (each second)
   delay(1100);
-  
+
   // read data from serial port
   if(SenCom.available()){
-    
+
     while (SenCom.available()){
-      
+
       data[offset] = SenCom.read();
-      
+
       // check for start
       if (offset == 0) {
         if (data[offset] != STX) continue;
       }
-      
+
       // check for end of message
       if (offset == 31) {
 
         uint8_t FCC = 0;
-        for ( int i = 1 ; i < 30 ; i ++ ) 
+        for ( int i = 1 ; i < 30 ; i ++ )
             FCC = FCC ^ data[i];
-        
+
         if (data[offset] != ETX || FCC != data[30] ) {
           Serial.println("Packet error");
           offset = 0;
           continue;
         }
-       
+
         SerComplete = true;    // we have valid data
-        break;  
+        break;
       }
-      
+
       // next position
       offset++;
     }
@@ -202,7 +202,7 @@ void read_all()
 
   // print result on one line, easy for spreadsheet == true
   if (SpreadSheetLayout) display_spreadSheet(SerComplete);
-  
+
   // print result underneath each other
   else display_line(SerComplete);
 }
@@ -210,13 +210,13 @@ void read_all()
 //////////////////////////////////////////////////////////////////////
 /////////////////////// DISPLAY ROUTINES /////////////////////////////
 //////////////////////////////////////////////////////////////////////
- 
+
 // display underneath each other
 void display_line(bool SerComplete)
 {
   static bool header = true;
   float val, val_t, val_tot, val_cnt;
-  
+
   // only print header first time
   if (header) {
     Serial.println(F("\t----------------------------Mass -------------    -------------------------------- Number ---------------------------------  -- status --"));
@@ -228,8 +228,8 @@ void display_line(bool SerComplete)
     // often seen the first reading to be "out of bounds". so we skip it
     return(true);
   }
- 
- #if I2COMMS == true 
+
+ #if I2COMMS == true
   Serial.print("I2c\t");
   print_aligned((double) myAirSensor.getPM1_0(), 8, 5);
   print_aligned((double) myAirSensor.getPM2_5(), 8, 5);
@@ -239,29 +239,29 @@ void display_line(bool SerComplete)
   val_tot = val * 0.5;
   val_cnt = val;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = myAirSensor.getPC1_0();
   val += val_t;
   val_tot += val * 1;
   val_cnt += val_t;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = myAirSensor.getPC2_5();
   val += val_t;
   val_tot += val * 2.5;
   val_cnt += val_t;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = myAirSensor.getPC5_0();
   val += val_t;
   val_tot += val * 5;
   val_cnt += val_t;
-  
+
   val_t = myAirSensor.getPC7_5();
   val += val_t;
   val_tot += val * 7.5;
   val_cnt += val_t;
-  
+
   val_t = myAirSensor.getPC10();
   val += val_t;
   val_tot += val * 10;
@@ -270,7 +270,7 @@ void display_line(bool SerComplete)
 
   val = val_tot / val_cnt;
   print_aligned((double) val, 9, 2);
-  
+
   Serial.print(" ");
   Serial.println(myAirSensor.getState(), HEX);
 #endif
@@ -285,29 +285,29 @@ void display_line(bool SerComplete)
   val_tot = val * 0.5;
   val_cnt = val;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = bufto16(SER_SNGCJA5_PCOUNT_1_0);
   val += val_t;
   val_tot += val * 1;
   val_cnt += val_t;
   print_aligned((double) val, 9, 2);
-  
+
   val_t =bufto16(SER_SNGCJA5_PCOUNT_2_5);
   val += val_t;
   val_tot += val * 2.5;
   val_cnt += val_t;
   print_aligned((double) val, 9, 2);
-  
+
   val_t = bufto16(SER_SNGCJA5_PCOUNT_5_0);
   val += val_t;
   val_tot += val * 5;
   val_cnt += val_t;
-  
+
   val_t = bufto16(SER_SNGCJA5_PCOUNT_10);
   val += val_t;
   val_tot += val * 7.5;
   val_cnt += val_t;
-  
+
   val_t = bufto16(SER_SNGCJA5_PCOUNT_10);
   val += val_t;
   val_tot += val * 10;
@@ -318,11 +318,11 @@ void display_line(bool SerComplete)
   print_aligned((double) val, 9, 2);
   Serial.print(" ");
   Serial.print(data[SER_SNGCJA5_STATE], HEX);
-    
+
   if (! SerComplete) Serial.print("\told");
 
   Serial.println();
-#endif 
+#endif
 }
 
 // display result easy for spreadsheet copy / paste
@@ -331,25 +331,25 @@ void display_spreadSheet(bool SerComplete)
   static bool header = true;
   float val;
   uint16_t ival;
-  
+
   // only print header first time
   if (header) {
 
     #if SERIALCOMMS == true
     Serial.print(F("\t------ Mass -------- \t------- Particle Count ------\t"));
     #endif
-   
-    #if I2COMMS == true 
+
+    #if I2COMMS == true
     Serial.print(F("\t------ Mass -------- \t------- Particle Count ------\t"));
     #endif
 
     Serial.println();
-    
+
     #if SERIALCOMMS == true
     Serial.print(F("\tPM1.0\tPM2.5\tPM10\tPM0.5\tPM1.0\tPM2.5\tPM10\t"));
     #endif
-    
-    #if I2COMMS == true 
+
+    #if I2COMMS == true
     Serial.print(F("\tPM1.0\tPM2.5\tPM10\tPM0.5\tPM1.0\tPM2.5\tPM10\t"));
     #endif
 
@@ -359,10 +359,10 @@ void display_spreadSheet(bool SerComplete)
     // often seen the first reading to be "out of bounds". so we skip it
     return(true);
   }
-  
 
-#if I2COMMS == true 
-  
+
+#if I2COMMS == true
+
   Serial.print("I2c\t");
   Serial.print(myAirSensor.getPM1_0(),2);
   Serial.print("\t");
@@ -376,7 +376,7 @@ void display_spreadSheet(bool SerComplete)
   val += myAirSensor.getPC1_0();    // 0.5 - 1 um
   Serial.print(val,2);
   Serial.print("\t");
-  
+
   val += myAirSensor.getPC2_5();    // 1 - 2.5 um
   Serial.print(val,2);
   Serial.print("\t");
@@ -396,7 +396,7 @@ void display_spreadSheet(bool SerComplete)
   Serial.print("\t");
   Serial.print(bufto16(SER_SNGCJA5_PM10));
   Serial.print("\t");
-  
+
   ival = bufto16(SER_SNGCJA5_PCOUNT_0_5);    // 0.3 - 0.5um
   Serial.print(ival);
   Serial.print("\t");
@@ -404,20 +404,20 @@ void display_spreadSheet(bool SerComplete)
   ival += bufto16(SER_SNGCJA5_PCOUNT_1_0);    // 0.5 - 1 um
   Serial.print(ival);
   Serial.print("\t");
-  
+
   ival += bufto16(SER_SNGCJA5_PCOUNT_2_5);    // 1 - 2.5 um
   Serial.print(ival);
   Serial.print("\t");
-  
+
   ival += bufto16(SER_SNGCJA5_PCOUNT_5_0);    // 2.5 - 5 um
   ival += bufto16(SER_SNGCJA5_PCOUNT_7_5);    // 5 - 7.5 um
   ival += bufto16(SER_SNGCJA5_PCOUNT_10);    // 7.5 - 10 um
 
   Serial.print(ival);
-  
+
   if (! SerComplete) Serial.print("\told");
 
-#endif  
+#endif
 
   Serial.println();
 }
